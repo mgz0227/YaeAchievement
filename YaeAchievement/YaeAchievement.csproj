@@ -23,7 +23,8 @@
         <PackageReference Include="Microsoft.Windows.CsWin32" Version="0.3.183">
             <PrivateAssets>all</PrivateAssets>
         </PackageReference>
-        <PackageReference Include="Google.Protobuf" Version="3.31.1"/>
+        <!-- [Update to 3.31.0 breaks AOT build](https://github.com/protocolbuffers/protobuf/issues/21824) -->
+        <PackageReference Include="Google.Protobuf" Version="3.30.2" />
         <PackageReference Include="Grpc.Tools" Version="2.72.0">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
