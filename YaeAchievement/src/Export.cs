@@ -48,7 +48,7 @@ public static class Export {
         request.Content = new StringContent(result, Encoding.UTF8, "application/json");
         using var response = Utils.CHttpClient.Send(request);
         if (response.StatusCode != HttpStatusCode.Created) {
-            AnsiConsole.WriteLine(App.ExportToCocogoatFail);
+            AnsiConsole.WriteLine(App.ExportToCocogoatFail, response.StatusCode);
             return;
         }
         var responseText = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();

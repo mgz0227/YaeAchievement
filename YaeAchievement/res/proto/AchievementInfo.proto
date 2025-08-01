@@ -17,9 +17,22 @@ message AchievementItem {
     string description = 4;
 }
 
+message MethodRvaConfig {
+    uint32 do_cmd = 1;
+    uint32 to_uint16 = 2;
+    uint32 update_normal_prop = 3;
+}
+
+message NativeLibConfig {
+    uint32 store_cmd_id = 1;
+    uint32 achievement_cmd_id = 2;
+    map<uint32, MethodRvaConfig> method_rva = 10;
+}
+
 message AchievementInfo {
     string version = 1;
     map<uint32, string> group = 2;
     map<uint32, AchievementItem> items = 3;
     AchievementProtoFieldInfo pb_info = 4;
+    NativeLibConfig native_config = 5;
 }

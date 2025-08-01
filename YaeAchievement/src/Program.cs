@@ -59,7 +59,7 @@ internal static class Program {
             }
         } catch (Exception) { /* ignored */ }
 
-        if (CacheFile.GetLastWriteTime("achievement_data").AddMinutes(60) > DateTime.UtcNow && data != null) {
+        if (data != null && CacheFile.GetLastWriteTime("achievement_data").AddMinutes(60) > DateTime.UtcNow) {
             var prompt = new SelectionPromptCompat<string>()
                 .Title(App.UsePreviousData)
                 .AddChoices(App.CommonYes, App.CommonNo);
@@ -72,7 +72,7 @@ internal static class Program {
         StartAndWaitResult(AppConfig.GamePath, new Dictionary<int, Func<BinaryReader, bool>> {
             { 1, AchievementAllDataNotify.OnReceive },
             { 2, PlayerStoreNotify.OnReceive },
-            { 100, PlayerPropNotify.OnReceive },
+            { 3, PlayerPropNotify.OnReceive },
         }, () => {
 #if DEBUG_EX
             PlayerPropNotify.OnFinish();

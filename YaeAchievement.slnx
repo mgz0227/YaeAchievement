@@ -1,3 +1,4 @@
 ﻿<Solution>
+  <Project Path="YaeAchievementLib\YaeAchievementLib.csproj" Type="Classic C#" />
   <Project Path="YaeAchievement\YaeAchievement.csproj" Type="Classic C#" />
 </Solution>

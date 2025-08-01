@@ -19,7 +19,7 @@
         <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
     </resheader>
     <data name="ExportToCocogoatFail" xml:space="preserve">
-        <value>Fail, please contact developer to get help information</value>
+        <value>Fail, please contact developer to get help information (CG_{0})</value>
     </data>
     <data name="AllAchievement" xml:space="preserve">
         <value>all achievement</value>

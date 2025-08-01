@@ -10,6 +10,4 @@ message UpdateInfo {
   bool   force_update = 5;
   bool   enable_lib_download = 6;
   bool   enable_auto_update = 7;
-  string current_cn_hash = 8;
-  string current_os_hash = 9;
 }

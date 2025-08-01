@@ -203,30 +203,40 @@ public static class Utils {
     }
 
     private static bool _isUnexpectedExit = true;
-    
+
     // ReSharper disable once UnusedMethodReturnValue.Global
     public static void StartAndWaitResult(string exePath, Dictionary<int, Func<BinaryReader, bool>> handlers, Action onFinish) {
-        _proc = new GameProcess(exePath);
-        _proc.LoadLibrary(GlobalVars.LibFilePath);
-        _proc.ResumeMainThread();
-        _proc.OnExit += () => {
-            if (_isUnexpectedExit) {
-                _proc = null;
-                AnsiConsole.WriteLine(App.GameProcessExit);
-                Environment.Exit(114514);
-            }
-        };
-        AnsiConsole.WriteLine(App.GameLoading, _proc.Id);
+        var hash = GetGameHash(exePath);
+        var nativeConf = GlobalVars.AchievementInfo.NativeConfig;
+        if (!nativeConf.MethodRva.TryGetValue(hash, out var methodRva)) {
+            AnsiConsole.WriteLine($"No match config {exePath} {hash:X8}");
+            Environment.Exit(0);
+            return;
+        }
         Task.Run(() => {
             using var stream = new NamedPipeServerStream(GlobalVars.PipeName);
-            using var reader = new BinaryReader(stream);
+            using var reader = new BinaryReader(stream, System.Text.Encoding.UTF8, true);
+            using var writer = new BinaryWriter(stream, System.Text.Encoding.UTF8, true);
             stream.WaitForConnection();
             int type;
             while ((type = stream.ReadByte()) != -1) {
-                if (type == 0xFF) {
-                    _isUnexpectedExit = false;
-                    onFinish();
-                    break;
+                switch (type) {
+                    case 0xFC:
+                        writer.Write(nativeConf.AchievementCmdId);
+                        writer.Write(nativeConf.StoreCmdId);
+                        break;
+                    case 0xFD:
+                        writer.Write(methodRva.DoCmd);
+                        writer.Write(methodRva.ToUint16);
+                        writer.Write(methodRva.UpdateNormalProp);
+                        break;
+                    case 0xFE:
+                        _proc!.ResumeMainThread();
+                        break;
+                    case 0xFF:
+                        _isUnexpectedExit = false;
+                        onFinish();
+                        return;
                 }
                 if (handlers.TryGetValue(type, out var handler)) {
                     if (handler(reader)) {
@@ -235,6 +245,23 @@ public static class Utils {
                 }
             }
         }).ContinueWith(task => { if (task.IsFaulted) OnUnhandledException(task.Exception!); });
+        _proc = new GameProcess(exePath);
+        _proc.LoadLibrary(GlobalVars.LibFilePath);
+        _proc.OnExit += () => {
+            if (_isUnexpectedExit) {
+                _proc = null;
+                AnsiConsole.WriteLine(App.GameProcessExit);
+                Environment.Exit(114514);
+            }
+        };
+        AnsiConsole.WriteLine(App.GameLoading, _proc.Id);
+    }
+
+    private static uint GetGameHash(string exePath) {
+        Span<byte> buffer = stackalloc byte[0x10000];
+        using var stream = File.OpenRead(exePath);
+        _ = stream.Read(buffer);
+        return Crc32.Compute(buffer);
     }
 
     internal static unsafe void SetQuickEditMode(bool enable) {

@@ -222,7 +222,7 @@ namespace YaeAchievement.res {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Fail, please contact developer to get help information.
+        ///   Looks up a localized string similar to Fail, please contact developer to get help information (CG_{0}).
         /// </summary>
         internal static string ExportToCocogoatFail {
             get {
