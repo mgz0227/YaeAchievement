@@ -30,7 +30,7 @@
 ## ダウンロード: [こちら](https://github.com/HolographicHat/YaeAchievement/releases/latest)
 
 ## フィードバックや問題?
-[issues](https://github.com/HolographicHat/YaeAchievement/issues) または [QQ群: 598720036](https://qm.qq.com/cgi-bin/qm/qr?k=9UGz-chQVTjZa4b82RA_A41vIcBVNpms&jump_from=webapi)
+[issues](https://github.com/HolographicHat/YaeAchievement/issues) または [QQ群: 598720036](https://qm.qq.com/q/mCQ8PwpxJY)
 
 ## よくある質問
 1. Q: 原神を起動中にエラーが発生しました: データ例外 (31-4302)   

@@ -30,7 +30,7 @@
 [releases/latest](https://github.com/HolographicHat/YaeAchievement/releases/latest)
 
 ## 问题反馈
-[issues](https://github.com/HolographicHat/YaeAchievement/issues)或[QQ群: 598720036](https://qm.qq.com/cgi-bin/qm/qr?k=9UGz-chQVTjZa4b82RA_A41vIcBVNpms&jump_from=webapi)
+[issues](https://github.com/HolographicHat/YaeAchievement/issues)或[QQ群: 598720036](https://qm.qq.com/q/mCQ8PwpxJY)
 
 ## 常见问题
 1. Q: 原神启动时报错: 数据异常(31-4302)   
