@@ -24,3 +24,5 @@ GetCurrentConsoleFontEx
 
 OpenProcess
 GetModuleFileNameEx
+
+LoadLibraryEx

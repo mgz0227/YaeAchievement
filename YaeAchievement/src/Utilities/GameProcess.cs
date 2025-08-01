@@ -2,6 +2,7 @@
 using System.Runtime.InteropServices;
 using Windows.Win32;
 using Windows.Win32.Foundation;
+using Windows.Win32.System.LibraryLoader;
 using Windows.Win32.System.Threading;
 using Spectre.Console;
 using static Windows.Win32.System.Memory.VIRTUAL_ALLOCATION_TYPE;
@@ -72,6 +73,20 @@ public sealed unsafe class GameProcess {
             if (Native.WaitForSingleObject(hThread, 2000) == 0) {
                 Native.VirtualFreeEx(Handle, lpLibPath, 0, MEM_RELEASE);
             }
+            var libHandle = Native.LoadLibraryEx(libPath, LOAD_LIBRARY_FLAGS.DONT_RESOLVE_DLL_REFERENCES);
+            if (libHandle.IsInvalid) {
+                throw new Win32Exception { Data = { { "api", "LoadLibraryEx" } } };
+            }
+            var libMainProc = Native.GetProcAddress(libHandle, "YaeMain");
+            if (libMainProc.IsNull) {
+                throw new Win32Exception { Data = { { "api", "GetProcAddress" } } };
+            }
+            var lpStartAddress2 = (delegate*unmanaged[Stdcall]<void*, uint>) libMainProc.Value; // THREAD_START_ROUTINE
+            var hThread2 = Native.CreateRemoteThread(Handle, null, 0, lpStartAddress2, null, 0);
+            if (hThread2.IsNull) {
+                throw new Win32Exception { Data = { { "api", "CreateRemoteThread2" } } };
+            }
+            Native.CloseHandle(hThread2);
             Native.CloseHandle(hThread);
         } catch (Win32Exception e) {
             _ = Terminate(0);

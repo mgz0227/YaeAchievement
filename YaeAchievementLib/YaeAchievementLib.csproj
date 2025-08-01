@@ -19,7 +19,6 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Elysia.Bootstrap" Version="1.0.14"/>
         <PackageReference Include="Microsoft.Windows.CsWin32" Version="0.3.183">
             <PrivateAssets>all</PrivateAssets>
         </PackageReference>
@@ -34,17 +33,12 @@
     </ItemGroup>
 
     <ItemGroup>
-        <LibraryEntrypoint Include="YaeMain"/>
         <AssemblyAttribute Include="System.Runtime.CompilerServices.DisableRuntimeMarshallingAttribute"/>
     </ItemGroup>
 
     <ItemGroup>
         <Using Include="System.Diagnostics"/>
         <Using Include="System.Diagnostics.CodeAnalysis"/>
-    </ItemGroup>
-
-    <ItemGroup>
-      <Folder Include="obj\" />
     </ItemGroup>
 
 </Project>
