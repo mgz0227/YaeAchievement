@@ -8,9 +8,10 @@ on:
 
 jobs:
   build:
-
     runs-on: windows-latest
-
+    defaults:
+      run:
+        working-directory: ./YaeAchievement
     steps:
     - uses: actions/checkout@v4
     - name: Setup .NET
@@ -27,11 +28,11 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: Artifacts-AOT
-        path: YaeAchievement\publish\publish
+        path: publish\publish
     - name: Publish-NoAOT
       run: dotnet publish --property:OutputPath=.\naot-publish\ --property:PublishAot=false --property:PublishSingleFile=true --property:PublishTrimmed=true
     - name: Upload-NoAOT
       uses: actions/upload-artifact@v4
       with:
         name: Artifacts-NoAOT
-        path: YaeAchievement\naot-publish\publish
+        path: naot-publish\publish
