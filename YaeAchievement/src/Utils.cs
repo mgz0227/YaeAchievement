@@ -214,36 +214,38 @@ public static class Utils {
             return;
         }
         Task.Run(() => {
-            using var stream = new NamedPipeServerStream(GlobalVars.PipeName);
-            using var reader = new BinaryReader(stream, System.Text.Encoding.UTF8, true);
-            using var writer = new BinaryWriter(stream, System.Text.Encoding.UTF8, true);
-            stream.WaitForConnection();
-            int type;
-            while ((type = stream.ReadByte()) != -1) {
-                switch (type) {
-                    case 0xFC:
-                        writer.Write(nativeConf.AchievementCmdId);
-                        writer.Write(nativeConf.StoreCmdId);
-                        break;
-                    case 0xFD:
-                        writer.Write(methodRva.DoCmd);
-                        writer.Write(methodRva.ToUint16);
-                        writer.Write(methodRva.UpdateNormalProp);
-                        break;
-                    case 0xFE:
-                        _proc!.ResumeMainThread();
-                        break;
-                    case 0xFF:
-                        _isUnexpectedExit = false;
-                        onFinish();
-                        return;
-                }
-                if (handlers.TryGetValue(type, out var handler)) {
-                    if (handler(reader)) {
-                        handlers.Remove(type);
+            try {
+                using var stream = new NamedPipeServerStream(GlobalVars.PipeName);
+                using var reader = new BinaryReader(stream, System.Text.Encoding.UTF8, true);
+                using var writer = new BinaryWriter(stream, System.Text.Encoding.UTF8, true);
+                stream.WaitForConnection();
+                int type;
+                while ((type = stream.ReadByte()) != -1) {
+                    switch (type) {
+                        case 0xFC:
+                            writer.Write(nativeConf.AchievementCmdId);
+                            writer.Write(nativeConf.StoreCmdId);
+                            break;
+                        case 0xFD:
+                            writer.Write(methodRva.DoCmd);
+                            writer.Write(methodRva.ToUint16);
+                            writer.Write(methodRva.UpdateNormalProp);
+                            break;
+                        case 0xFE:
+                            _proc!.ResumeMainThread();
+                            break;
+                        case 0xFF:
+                            _isUnexpectedExit = false;
+                            onFinish();
+                            return;
+                    }
+                    if (handlers.TryGetValue(type, out var handler)) {
+                        if (handler(reader)) {
+                            handlers.Remove(type);
+                        }
                     }
                 }
-            }
+            } catch (IOException e) when (e.Message == "Pipe is broken.") { } // SR.IO_PipeBroken
         }).ContinueWith(task => { if (task.IsFaulted) OnUnhandledException(task.Exception!); });
         _proc = new GameProcess(exePath);
         _proc.LoadLibrary(GlobalVars.LibFilePath);
