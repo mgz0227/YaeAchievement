@@ -18,14 +18,14 @@ public static class GlobalVars {
     public static readonly string CachePath = Path.Combine(DataPath, "cache");
     public static readonly string LibFilePath = Path.Combine(DataPath, "YaeAchievement.dll");
 
-    public const uint   AppVersionCode = 239;
-    public const string AppVersionName = "250802-97d063ec";
+    public const uint   AppVersionCode = 240;
+    public const string AppVersionName = "5.7";
 
     public const string PipeName = "YaeAchievementPipe";
 
     [field:MaybeNull]
     public static AchievementInfo AchievementInfo =>
-        field ??= AchievementInfo.Parser.ParseFrom(Utils.GetBucketFile("schicksal/metadata").GetAwaiter().GetResult());
+        field ??= AchievementInfo.Parser.ParseFrom(/*Utils.GetBucketFile("schicksal/metadata").GetAwaiter().GetResult()*/File.ReadAllBytes("E:\\Repositories\\YaeAchievement\\sync\\files\\schicksal\\metadata"));
 
     static GlobalVars() {
         Directory.CreateDirectory(DataPath);
