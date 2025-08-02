@@ -25,7 +25,7 @@ public static class GlobalVars {
 
     [field:MaybeNull]
     public static AchievementInfo AchievementInfo =>
-        field ??= AchievementInfo.Parser.ParseFrom(/*Utils.GetBucketFile("schicksal/metadata").GetAwaiter().GetResult()*/File.ReadAllBytes("E:\\Repositories\\YaeAchievement\\sync\\files\\schicksal\\metadata"));
+        field ??= AchievementInfo.Parser.ParseFrom(Utils.GetBucketFile("schicksal/metadata").GetAwaiter().GetResult());
 
     static GlobalVars() {
         Directory.CreateDirectory(DataPath);
