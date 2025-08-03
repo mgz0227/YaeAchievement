@@ -15,15 +15,16 @@ jobs:
       run:
         working-directory: ./YaeAchievementLib
     steps:
-    - name: Checkout Repo
-      uses: actions/checkout@v4
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v4
+    - uses: actions/checkout@v4
+    - uses: actions/setup-dotnet@v4
       with:
         dotnet-version: 9.0.x
-    - name: Restore dependencies
-      run: dotnet restore
-    - name: Build
+    - name: Build native library
       run: dotnet publish
     - name: Publish to NuGet
-      run: nuget push .\bin\Release\*.nupkg ${{ secrets.NUGET_API_KEY }} -src https://api.nuget.org/v3/index.json
+      run: nuget push bin\Release\*.nupkg ${{ secrets.NUGET_API_KEY }} -src https://api.nuget.org/v3/index.json
+    - name: Upload nuget package
+      uses: actions/upload-artifact@v4
+      with:
+        name: nupkg
+        path: bin\Release\*.nupkg

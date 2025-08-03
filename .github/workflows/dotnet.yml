@@ -28,12 +28,12 @@ jobs:
     - name: Upload-AOT
       uses: actions/upload-artifact@v4
       with:
-        name: Artifacts-AOT
-        path: publish\publish
+        name: aot
+        path: YaeAchievement\publish\publish
     - name: Publish-NoAOT
       run: dotnet publish --property:OutputPath=.\naot-publish\ --property:PublishAot=false --property:PublishSingleFile=true --property:PublishTrimmed=true
     - name: Upload-NoAOT
       uses: actions/upload-artifact@v4
       with:
-        name: Artifacts-NoAOT
-        path: naot-publish\publish
+        name: normal
+        path: YaeAchievement\naot-publish\publish
