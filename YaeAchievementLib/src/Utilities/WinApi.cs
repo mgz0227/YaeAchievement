@@ -65,4 +65,7 @@ internal static unsafe partial class User32 {
     [LibraryImport("USER32.dll", StringMarshalling = StringMarshalling.Utf16, SetLastError = true)]
     internal static partial int MessageBoxW(nint hWnd, string text, string caption, uint uType);
 
+    [LibraryImport("USER32.dll")]
+    internal static partial nint CallNextHookEx(nint hhk, int nCode, nint wParam, nint lParam);
+
 }

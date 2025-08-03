@@ -27,6 +27,11 @@ internal static unsafe class Application {
         return 0;
     }
 
+    [UnmanagedCallersOnly(EntryPoint = "YaeWndHook")]
+    private static nint WndHook(int nCode, nint wParam, nint lParam) {
+        return User32.CallNextHookEx(0, nCode, wParam, lParam);
+    }
+
     #region RecvPacket
 
     private static delegate*unmanaged<byte*, int, ushort> _toUInt16;

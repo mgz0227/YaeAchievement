@@ -2,29 +2,28 @@ name: YaeLib NuGet Publish
 
 on:
   workflow_dispatch:
-  release:
-    types: [released]
+    inputs:
+      tags:
+        description: 'Version already increased?'
+        required: true
+        type: boolean
 
 jobs:
   publish:
     runs-on: windows-latest
-
+    defaults:
+      run:
+        working-directory: ./YaeAchievementLib
     steps:
     - name: Checkout Repo
       uses: actions/checkout@v4
-
-    - name: Setup MSBuild
-      uses: microsoft/setup-msbuild@v2
-
-    - name: Restore NuGet Packages
-      run: nuget restore lib\YaeAchievementLib.sln
-
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 9.0.x
+    - name: Restore dependencies
+      run: dotnet restore
     - name: Build
-      continue-on-error: true
-      run: msbuild lib\YaeAchievementLib.sln /p:Configuration=Release
-
-    - name: Pack
-      run: nuget pack lib\YaeAchievementLib.nuspec
-
+      run: dotnet publish
     - name: Publish to NuGet
       run: nuget push *.nupkg ${{ secrets.NUGET_API_KEY }} -src https://api.nuget.org/v3/index.json

@@ -13,7 +13,8 @@ jobs:
       run:
         working-directory: ./YaeAchievement
     steps:
-    - uses: actions/checkout@v4
+    - name: Checkout Repo
+      uses: actions/checkout@v4
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:

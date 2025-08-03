@@ -41,4 +41,24 @@
         <Using Include="System.Diagnostics.CodeAnalysis"/>
     </ItemGroup>
 
+    <PropertyGroup>
+        <PackageId>Yae.Lib</PackageId>
+        <Version>5.4.0</Version>
+        <Authors>HoloHat</Authors>
+        <DevelopmentDependency>true</DevelopmentDependency>
+        <PackageLicenseExpression>GPL-3.0-only</PackageLicenseExpression>
+        <RepositoryUrl>https://github.com/HolographicHat/Yae</RepositoryUrl>
+        <Description>Yae Lib</Description>
+        <IncludeBuildOutput>false</IncludeBuildOutput>
+        <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <None Include="$(PublishDir)\$(TargetName)$(NativeBinaryExt)" Pack="true" PackagePath="runtimes\win-x64\native" Visible="false"/>
+    </ItemGroup>
+
+    <Target Name="GenerateNuGetPackage" AfterTargets="CopyNativeBinary">
+        <Exec Command="dotnet pack --no-build --nologo" UseUtf8Encoding="Always" EchoOff="true"/>
+    </Target>
+
 </Project>
