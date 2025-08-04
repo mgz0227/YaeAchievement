@@ -235,6 +235,7 @@ public static class Utils {
                             _proc!.ResumeMainThread();
                             break;
                         case 0xFF:
+                            writer.Write(true);
                             _isUnexpectedExit = false;
                             onFinish();
                             return;

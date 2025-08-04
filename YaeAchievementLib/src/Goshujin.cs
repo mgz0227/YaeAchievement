@@ -26,8 +26,10 @@ internal static class Goshujin {
     private static NamedPipeClientStream _pipeStream = null!;
     private static BinaryReader _pipeReader = null!;
     private static BinaryWriter _pipeWriter = null!;
+    private static Lock _lock = null!;
 
     public static void Init(string pipeName = "YaeAchievementPipe") {
+        _lock = new Lock();
         _pipeStream = new NamedPipeClientStream(pipeName);
         _pipeReader = new BinaryReader(_pipeStream);
         _pipeWriter = new BinaryWriter(_pipeStream);
@@ -36,26 +38,32 @@ internal static class Goshujin {
     }
 
     public static void PushAchievementData(Span<byte> data) {
-        _pipeWriter.Write((byte) 1);
-        _pipeWriter.Write(data.Length);
-        _pipeWriter.Write(data);
-        _achievementDataPushed = true;
-        ExitIfFinished();
+        using (_lock.EnterScope()) {
+            _pipeWriter.Write((byte) 1);
+            _pipeWriter.Write(data.Length);
+            _pipeWriter.Write(data);
+            _achievementDataPushed = true;
+            ExitIfFinished();
+        }
     }
 
     public static void PushStoreData(Span<byte> data) {
-        _pipeWriter.Write((byte) 2);
-        _pipeWriter.Write(data.Length);
-        _pipeWriter.Write(data);
-        _storeDataPushed = true;
-        ExitIfFinished();
+        using (_lock.EnterScope()) {
+            _pipeWriter.Write((byte) 2);
+            _pipeWriter.Write(data.Length);
+            _pipeWriter.Write(data);
+            _storeDataPushed = true;
+            ExitIfFinished();
+        }
     }
 
     public static void PushPlayerProp(int type, double value) {
-        _pipeWriter.Write((byte) 3);
-        _pipeWriter.Write(type);
-        _pipeWriter.Write(value);
-        ExitIfFinished();
+        using (_lock.EnterScope()) {
+            _pipeWriter.Write((byte) 3);
+            _pipeWriter.Write(type);
+            _pipeWriter.Write(value);
+            ExitIfFinished();
+        }
     }
 
     public static void LoadCmdTable() {
@@ -82,6 +90,7 @@ internal static class Goshujin {
     private static void ExitIfFinished() {
         if (_storeDataPushed && _achievementDataPushed && Application.RequiredPlayerProperties.Count == 0) {
             _pipeWriter.Write((byte) 0xFF);
+            _pipeReader.ReadBoolean();
             Environment.Exit(0);
         }
     }
