@@ -3,9 +3,14 @@ name: YaeLib NuGet Publish
 on:
   workflow_dispatch:
     inputs:
-      tags:
+      confirm_version:
         description: 'Version already increased?'
         required: true
+        type: boolean
+      perform_publish:
+        description: 'Publish to nuget?'
+        required: true
+        default: true
         type: boolean
 
 jobs:
@@ -13,7 +18,7 @@ jobs:
     runs-on: windows-latest
     defaults:
       run:
-        working-directory: ./YaeAchievementLib
+        working-directory: YaeAchievementLib
     steps:
     - uses: actions/checkout@v4
     - uses: actions/setup-dotnet@v4
@@ -22,9 +27,10 @@ jobs:
     - name: Build native library
       run: dotnet publish
     - name: Publish to NuGet
+      if: ${{ inputs.perform_publish }}
       run: nuget push bin\Release\*.nupkg ${{ secrets.NUGET_API_KEY }} -src https://api.nuget.org/v3/index.json
     - name: Upload nuget package
       uses: actions/upload-artifact@v4
       with:
         name: nupkg
-        path: bin\Release\*.nupkg
+        path: YaeAchievementLib\bin\Release\*.nupkg
