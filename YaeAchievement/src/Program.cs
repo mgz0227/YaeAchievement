@@ -47,10 +47,10 @@ internal static class Program {
             Environment.Exit(-1);
         }
 
-        await CheckUpdate(ToBooleanOrDefault(args.GetOrNull(2)));
+        await CheckUpdate(ToBooleanOrDefault(args.ElementAtOrDefault(2)));
 
-        AppConfig.Load(args.GetOrNull(0) ?? "auto");
-        Export.ExportTo = ToIntOrDefault(args.GetOrNull(1), 114514);
+        AppConfig.Load(args.ElementAtOrDefault(0) ?? "auto");
+        Export.ExportTo = ToIntOrDefault(args.ElementAtOrDefault(1), 114514);
 
         AchievementAllDataNotify? data = null;
         try {

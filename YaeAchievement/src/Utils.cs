@@ -1,9 +1,11 @@
 ﻿using System.ComponentModel;
 using System.Globalization;
+using System.IO.Compression;
 using System.IO.Pipes;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Sockets;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Windows.Win32;
 using Windows.Win32.Foundation;
@@ -28,30 +30,65 @@ public static class Utils {
 
     public static async Task<byte[]> GetBucketFile(string path, bool useCache = true) {
         var transaction = SentrySdk.StartTransaction(path, "bucket.get");
-        SentrySdk.ConfigureScope(scope => scope.Transaction = transaction);
-        try {
-            var data = await GetFile("https://api.qhy04.com/hutaocdn/download?filename={0}", path, useCache);
-            transaction.Finish();
-            return data;
-        } catch (Exception e) when (e is SocketException or TaskCanceledException or HttpRequestException) {
+        SentrySdk.ConfigureScope(static (scope, transaction) => scope.Transaction = transaction, transaction);
+        var cacheKey = useCache ? path : null;
+        //
+        if (_updateInfo?.CdnFiles.TryGetValue(path, out var cdnFile) == true) {
+            try {
+                var tasks = cdnFile.Urls.Select(url => GetFileFromCdn(url, cacheKey, cdnFile.Hash, cdnFile.Size));
+                var data = await Task.WhenAny(tasks).Unwrap();
+                transaction.Finish();
+                return data;
+            } catch (Exception e) when (e is SocketException or TaskCanceledException or HttpRequestException or InvalidDataException) {}
         }
+        //
         try {
             var data = await Task.WhenAny(
-                GetFile("https://rin.holohat.work/{0}", path, useCache),
-                GetFile("https://cn-cd-1259389942.file.myqcloud.com/{0}", path, useCache)
+                GetFileReal($"https://rin.holohat.work/{path}", cacheKey),
+                GetFileReal($"https://cn-cd-1259389942.file.myqcloud.com/{path}", cacheKey)
             ).Unwrap();
             transaction.Finish();
             return data;
-        } catch (Exception ex) when (ex is HttpRequestException or SocketException or TaskCanceledException) {
-            transaction.Finish();
-            AnsiConsole.WriteLine(App.NetworkError, ex.Message);
-            Environment.Exit(-1);
+        } catch (Exception e) when (e is SocketException or TaskCanceledException or HttpRequestException) {
+            AnsiConsole.WriteLine(App.NetworkError, e.Message);
         }
+        transaction.Finish();
+        Environment.Exit(-1);
         throw new UnreachableException();
-        static async Task<byte[]> GetFile(string baseUrl, string objectKey, bool useCache) {
-            using var reqwest = new HttpRequestMessage(HttpMethod.Get, string.Format(baseUrl, objectKey));
+        static async Task<byte[]> GetFileFromCdn(string url, string? cacheKey, uint hash, uint size) {
+            var data = await GetFileReal(url, cacheKey);
+            if (data.Length != size || Crc32.Compute(data) != hash) {
+                throw new InvalidDataException();
+            }
+            if (data.Length > 44 && Unsafe.As<byte, uint>(ref data[0]) == 0x38464947) { // GIF8
+                var seed = Unsafe.As<byte, uint>(ref data[44]) ^ 0x01919810;
+                var hush = Unsafe.As<byte, uint>(ref data[48]) - 0x32123432; // 　　　　　　　　　？！！
+                var span = data.AsSpan()[52..];
+                Span<byte> xorTable = stackalloc byte[4096];
+                new Random((int) seed).NextBytes(xorTable);
+                for (var i = 0; i < span.Length; i++) {
+                    span[i] ^= xorTable[i % 4096];
+                }
+                using var dataStream = new MemoryStream();
+                unsafe {
+                    fixed (byte* p = span) {
+                        var cmpStream = new UnmanagedMemoryStream(p, span.Length);
+                        using var decompressor = new BrotliStream(cmpStream, CompressionMode.Decompress);
+                        // ReSharper disable once MethodHasAsyncOverload
+                        decompressor.CopyTo(dataStream);
+                    }
+                }
+                data = dataStream.ToArray();
+                if (Crc32.Compute(data) != hush) {
+                    throw new InvalidDataException();
+                }
+            }
+            return data;
+        }
+        static async Task<byte[]> GetFileReal(string url, string? cacheKey) {
+            using var reqwest = new HttpRequestMessage(HttpMethod.Get, url);
             CacheItem? cache = null;
-            if (useCache && CacheFile.TryRead(objectKey, out cache)) {
+            if (cacheKey != null && CacheFile.TryRead(cacheKey, out cache)) {
                 reqwest.Headers.TryAddWithoutValidation("If-None-Match", $"{cache.Etag}");
             }
             using var response = await CHttpClient.SendAsync(reqwest);
@@ -60,16 +97,12 @@ public static class Utils {
             }
             response.EnsureSuccessStatusCode();
             var bytes = await response.Content.ReadAsByteArrayAsync();
-            if (useCache) {
+            if (cacheKey != null) {
                 var etag = response.Headers.ETag!.Tag;
-                CacheFile.Write(objectKey, bytes, etag);
+                CacheFile.Write(cacheKey, bytes, etag);
             }
             return bytes;
         }
-    }
-
-    public static T? GetOrNull<T>(this T[] array, uint index) where T : class {
-        return array.Length > index ? array[index] : null;
     }
 
     public static int ToIntOrDefault(string? value, int defaultValue = 0) {
@@ -96,7 +129,7 @@ public static class Utils {
     }
 
     // ReSharper disable once NotAccessedField.Local
-    private static UpdateInfo _updateInfo = null!;
+    private static UpdateInfo? _updateInfo;
 
     public static Task StartSpinnerAsync(string status, Func<StatusContext, Task> func) {
         return AnsiConsole.Status().Spinner(Spinner.Known.SimpleDotsScrolling).StartAsync(status, func);
@@ -109,7 +142,7 @@ public static class Utils {
     public static async Task CheckUpdate(bool useLocalLib) {
         try {
             var versionData = await StartSpinnerAsync(App.UpdateChecking, _ => GetBucketFile("schicksal/version"));
-            var versionInfo = UpdateInfo.Parser.ParseFrom(versionData)!;
+            var versionInfo = _updateInfo = UpdateInfo.Parser.ParseFrom(versionData)!;
             if (GlobalVars.AppVersionCode < versionInfo.VersionCode) {
                 AnsiConsole.WriteLine(App.UpdateNewVersion, GlobalVars.AppVersionName, versionInfo.VersionName);
                 AnsiConsole.WriteLine(App.UpdateDescription, versionInfo.Description);
@@ -136,7 +169,6 @@ public static class Utils {
                 var data = await GetBucketFile("schicksal/lic.dll");
                 await File.WriteAllBytesAsync(GlobalVars.LibFilePath, data); // 要求重启电脑
             }
-            _updateInfo = versionInfo;
         } catch (IOException e) when ((uint) e.HResult == 0x80070020) { // ERROR_SHARING_VIOLATION
             // IO_SharingViolation_File
             // The process cannot access the file '{0}' because it is being used by another process.
@@ -146,17 +178,14 @@ public static class Utils {
     }
 
     // ReSharper disable once UnusedMethodReturnValue.Global
-    public static bool ShellOpen(string path, string? args = null) {
+    public static bool ShellOpen(string path, string args = "") {
         try {
-            var startInfo = new ProcessStartInfo {
-                FileName = path,
-                UseShellExecute = true
-            };
-            if (args != null) {
-                startInfo.Arguments = args;
-            }
             return new Process {
-                StartInfo = startInfo
+                StartInfo = new ProcessStartInfo {
+                    FileName = path,
+                    UseShellExecute = true,
+                    Arguments = args
+                }
             }.Start();
         } catch (Exception) {
             return false;
