@@ -1,5 +1,4 @@
 ﻿using System.Diagnostics.CodeAnalysis;
-using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using Spectre.Console;
@@ -23,12 +22,7 @@ public static partial class AppConfig {
         } else {
             GamePath = ReadGamePathFromProcess();
         }
-        Span<byte> buffer = stackalloc byte[0x10000];
-        using var stream = File.OpenRead(GamePath);
-        if (stream.Read(buffer) == buffer.Length) {
-            var hash = Convert.ToHexString(MD5.HashData(buffer));
-            CacheFile.Write("genshin_impact_game_path_v2", Encoding.UTF8.GetBytes($"{GamePath}\u1145{hash}"));
-        }
+        CacheFile.Write("genshin_impact_game_path_v2", Encoding.UTF8.GetBytes($"{GamePath}\u1145{Utils.GetGameHash(GamePath)}"));
         SentrySdk.AddBreadcrumb(GamePath.EndsWith("YuanShen.exe") ? "CN" : "OS", "GamePath");
         return;
         static bool TryReadGamePathFromCache([NotNullWhen(true)] out string? path) {
@@ -38,9 +32,7 @@ public static partial class AppConfig {
                     return false;
                 }
                 var cacheData = cacheFile.Content.ToStringUtf8().Split("\u1145");
-                Span<byte> buffer = stackalloc byte[0x10000];
-                using var stream = File.OpenRead(cacheData[0]);
-                if (stream.Read(buffer) != buffer.Length || Convert.ToHexString(MD5.HashData(buffer)) != cacheData[1]) {
+                if (Utils.GetGameHash(cacheData[0]) != uint.Parse(cacheData[1])) {
                     return false;
                 }
                 path = cacheData[0];

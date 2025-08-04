@@ -259,11 +259,15 @@ public static class Utils {
         AnsiConsole.WriteLine(App.GameLoading, _proc.Id);
     }
 
-    private static uint GetGameHash(string exePath) {
-        Span<byte> buffer = stackalloc byte[0x10000];
-        using var stream = File.OpenRead(exePath);
-        _ = stream.Read(buffer);
-        return Crc32.Compute(buffer);
+    public static uint GetGameHash(string exePath) {
+        try {
+            Span<byte> buffer = stackalloc byte[0x10000];
+            using var stream = File.OpenRead(exePath);
+            _ = stream.ReadAtLeast(buffer, 0x10000, false);
+            return Crc32.Compute(buffer);
+        } catch (IOException) {
+            return 0xFFFFFFFF;
+        }
     }
 
     internal static unsafe void SetQuickEditMode(bool enable) {
