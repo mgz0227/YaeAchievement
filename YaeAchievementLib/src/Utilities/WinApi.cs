@@ -43,6 +43,9 @@ internal static unsafe partial class Kernel32 {
     [return:MarshalAs(UnmanagedType.I4)]
     [LibraryImport("KERNEL32.dll", SetLastError = true)]
     internal static partial bool SetConsoleMode(nint hConsoleHandle, uint dwMode);
+    
+    [LibraryImport("KERNEL32.dll", SetLastError = true)]
+    internal static partial nint CreateThread(nint lpThreadAttributes, nint dwStackSize, delegate*unmanaged<nint, uint> lpStartAddress, nint lpParameter, uint dwCreationFlags, uint* lpThreadId);
 
 }
 

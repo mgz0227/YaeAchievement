@@ -7,8 +7,13 @@ namespace Yae;
 
 internal static unsafe class Application {
 
+    private static bool _initialized;
+
     [UnmanagedCallersOnly(EntryPoint = "YaeMain")]
     private static uint Awake(nint hModule) {
+        if (Interlocked.Exchange(ref _initialized, true)) {
+            return 1;
+        }
         Native.RegisterUnhandledExceptionHandler();
         Log.UseConsoleOutput();
         Log.Trace("~");
@@ -29,6 +34,7 @@ internal static unsafe class Application {
 
     [UnmanagedCallersOnly(EntryPoint = "YaeWndHook")]
     private static nint WndHook(int nCode, nint wParam, nint lParam) {
+        ((delegate*unmanaged<nint, uint>) &Awake)(0);
         return User32.CallNextHookEx(0, nCode, wParam, lParam);
     }
 
