@@ -7,8 +7,8 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <TargetFramework>net9.0-windows</TargetFramework>
-        <FileVersion>5.7.0</FileVersion>
-        <AssemblyVersion>5.7.0</AssemblyVersion>
+        <FileVersion>5.7.1</FileVersion>
+        <AssemblyVersion>5.7.1</AssemblyVersion>
         <ApplicationIcon>res\icon.ico</ApplicationIcon>
         <ApplicationManifest>res\app.manifest</ApplicationManifest>
     </PropertyGroup>
@@ -24,7 +24,7 @@
             <PrivateAssets>all</PrivateAssets>
         </PackageReference>
         <!-- [Update to 3.31.0 breaks AOT build](https://github.com/protocolbuffers/protobuf/issues/21824) -->
-        <PackageReference Include="Google.Protobuf" Version="3.30.2" />
+        <PackageReference Include="Google.Protobuf" Version="3.30.2"/>
         <PackageReference Include="Grpc.Tools" Version="2.72.0">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
