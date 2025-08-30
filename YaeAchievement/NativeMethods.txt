@@ -26,3 +26,7 @@ OpenProcess
 GetModuleFileNameEx
 
 LoadLibraryEx
+
+CreateToolhelp32Snapshot
+Module32First
+Module32Next

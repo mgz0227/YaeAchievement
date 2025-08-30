@@ -2,6 +2,7 @@
 using System.Runtime.InteropServices;
 using Windows.Win32;
 using Windows.Win32.Foundation;
+using Windows.Win32.System.Diagnostics.ToolHelp;
 using Windows.Win32.System.LibraryLoader;
 using Windows.Win32.System.Threading;
 using Spectre.Console;
@@ -73,7 +74,29 @@ internal sealed unsafe class GameProcess {
             if (Native.WaitForSingleObject(hThread, 2000) == 0) {
                 Native.VirtualFreeEx(Handle, lpLibPath, 0, MEM_RELEASE);
             }
-            var libHandle = Native.LoadLibraryEx(libPath, LOAD_LIBRARY_FLAGS.DONT_RESOLVE_DLL_REFERENCES);
+            // Get lib base address in target process
+            byte* baseAddress = null;
+            using (var hSnap = Native.CreateToolhelp32Snapshot_SafeHandle(CREATE_TOOLHELP_SNAPSHOT_FLAGS.TH32CS_SNAPMODULE, Id)) {
+                if (hSnap.IsInvalid) {
+                    throw new Win32Exception { Data = { { "api", "CreateToolhelp32Snapshot" } } };
+                }
+                var moduleEntry = new MODULEENTRY32 {
+                    dwSize = (uint) sizeof(MODULEENTRY32)
+                };
+                if (Native.Module32First(hSnap, ref moduleEntry)) {
+                    do {
+                        if (new string((sbyte*) &moduleEntry.szExePath._0) == libPath) {
+                            baseAddress = moduleEntry.modBaseAddr;
+                            break;
+                        }
+                    } while (Native.Module32Next(hSnap, ref moduleEntry));
+                }
+            }
+            if (baseAddress == null) {
+                throw new InvalidOperationException("No matching module found in target process.");
+            }
+            //
+            using var libHandle = Native.LoadLibraryEx(libPath, LOAD_LIBRARY_FLAGS.DONT_RESOLVE_DLL_REFERENCES);
             if (libHandle.IsInvalid) {
                 throw new Win32Exception { Data = { { "api", "LoadLibraryEx" } } };
             }
@@ -81,7 +104,9 @@ internal sealed unsafe class GameProcess {
             if (libMainProc.IsNull) {
                 throw new Win32Exception { Data = { { "api", "GetProcAddress" } } };
             }
-            var lpStartAddress2 = (delegate*unmanaged[Stdcall]<void*, uint>) libMainProc.Value; // THREAD_START_ROUTINE
+            var libMainProcRVA = libMainProc.Value - libHandle.DangerousGetHandle();
+            var lpStartAddress2 = (delegate*unmanaged[Stdcall]<void*, uint>) (baseAddress + libMainProcRVA); // THREAD_START_ROUTINE
+            //
             var hThread2 = Native.CreateRemoteThread(Handle, null, 0, lpStartAddress2, null, 0);
             if (hThread2.IsNull) {
                 throw new Win32Exception { Data = { { "api", "CreateRemoteThread2" } } };
