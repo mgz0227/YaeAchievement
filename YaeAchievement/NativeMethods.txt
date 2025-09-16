@@ -1,32 +1,30 @@
-﻿CloseClipboard
-CreateProcess
-CreateRemoteThread
-EmptyClipboard
-GetConsoleMode
-GetDC
-GetDeviceCaps
-GetModuleHandle
-GetProcAddress
-GetStdHandle
+﻿// kernel32
 GlobalLock
+OpenProcess
+GetStdHandle
 GlobalUnlock
-OpenClipboard
 ResumeThread
-SetClipboardData
+Module32Next
+Module32First
+CreateProcess
+LoadLibraryEx
+VirtualFreeEx
+VirtualAllocEx
+GetProcAddress
+GetConsoleMode
 SetConsoleMode
 TerminateProcess
-VirtualAllocEx
-VirtualFreeEx
-WaitForSingleObject
+CreateRemoteThread
 WriteProcessMemory
-
+WaitForSingleObject
 GetCurrentConsoleFontEx
+CreateToolhelp32Snapshot
 
-OpenProcess
+// psapi
 GetModuleFileNameEx
 
-LoadLibraryEx
-
-CreateToolhelp32Snapshot
-Module32First
-Module32Next
+// user32
+OpenClipboard
+CloseClipboard
+EmptyClipboard
+SetClipboardData

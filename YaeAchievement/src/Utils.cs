@@ -259,6 +259,10 @@ public static class Utils {
                             writer.Write(methodRva.DoCmd);
                             writer.Write(methodRva.ToUint16);
                             writer.Write(methodRva.UpdateNormalProp);
+                            writer.Write(methodRva.NewString);
+                            writer.Write(methodRva.FindGameObject);
+                            writer.Write(methodRva.EventSystemUpdate);
+                            writer.Write(methodRva.SimulatePointerClick);
                             break;
                         case 0xFE:
                             _proc!.ResumeMainThread();

@@ -7,8 +7,6 @@ using static YaeAchievement.Utils;
 
 namespace YaeAchievement;
 
-// TODO: WndHook
-
 internal static class Program {
 
     public static async Task Main(string[] args) {

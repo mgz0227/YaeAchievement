@@ -29,6 +29,7 @@ internal static unsafe class Application {
         MinHook.Attach(GameMethod.DoCmd, &OnDoCmd, out _doCmd);
         MinHook.Attach(GameMethod.ToUInt16, &OnToUInt16, out _toUInt16);
         MinHook.Attach(GameMethod.UpdateNormalProp, &OnUpdateNormalProp, out _updateNormalProp);
+        MinHook.Attach(GameMethod.EventSystemUpdate, &OnEventSystemUpdate, out _eventSystemUpdate);
         return 0;
     }
 
@@ -138,6 +139,26 @@ internal static unsafe class Application {
             }
         }
         return result;
+    }
+
+    #endregion
+
+    #region EnterGate
+
+    private static long _lastTryEnterTime;
+    
+    private static delegate*unmanaged<nint, void> _eventSystemUpdate;
+
+    [UnmanagedCallersOnly]
+    public static void OnEventSystemUpdate(nint @this) {
+        _eventSystemUpdate(@this);
+        if (Environment.TickCount64 - _lastTryEnterTime > 200) {
+            var obj = GameMethod.FindGameObject(GameMethod.NewString("BtnStart"u8.AsPointer()));
+            if (obj != 0 && GameMethod.SimulatePointerClick(@this, obj)) {
+                MinHook.Detach((nint) GameMethod.EventSystemUpdate);
+            }
+            _lastTryEnterTime = Environment.TickCount64;
+        }
     }
 
     #endregion

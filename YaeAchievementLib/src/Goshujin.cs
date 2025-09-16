@@ -19,6 +19,14 @@ internal static unsafe class GameMethod {
 
     public static delegate*unmanaged<nint, int, double, double, int, void> UpdateNormalProp { get; set; }
 
+    public static delegate*unmanaged<nint, nint> NewString { get; set; }
+
+    public static delegate*unmanaged<nint, nint> FindGameObject { get; set; }
+
+    public static delegate*unmanaged<nint, void> EventSystemUpdate { get; set; }
+
+    public static delegate*unmanaged<nint, nint, bool> SimulatePointerClick { get; set; }
+
 }
 
 internal static class Goshujin {
@@ -77,6 +85,10 @@ internal static class Goshujin {
         GameMethod.DoCmd = (delegate*unmanaged<int, void*, int, int>) Native.RVAToVA(_pipeReader.ReadUInt32());
         GameMethod.ToUInt16 = (delegate*unmanaged<byte*, int, ushort>) Native.RVAToVA(_pipeReader.ReadUInt32());
         GameMethod.UpdateNormalProp = (delegate*unmanaged<nint, int, double, double, int, void>) Native.RVAToVA(_pipeReader.ReadUInt32());
+        GameMethod.NewString = (delegate*unmanaged<nint, nint>) Native.RVAToVA(_pipeReader.ReadUInt32());
+        GameMethod.FindGameObject = (delegate*unmanaged<nint, nint>) Native.RVAToVA(_pipeReader.ReadUInt32());
+        GameMethod.EventSystemUpdate = (delegate*unmanaged<nint, void>) Native.RVAToVA(_pipeReader.ReadUInt32());
+        GameMethod.SimulatePointerClick = (delegate*unmanaged<nint, nint, bool>) Native.RVAToVA(_pipeReader.ReadUInt32());
     }
 
     public static void ResumeMainThread() {

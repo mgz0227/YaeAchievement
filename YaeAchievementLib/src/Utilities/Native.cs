@@ -93,6 +93,9 @@ internal static unsafe class Native {
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static nint AsPointer(this ReadOnlySpan<byte> span) => *(nint*) Unsafe.AsPointer(ref span);
+
 }
 
 internal static partial class MinHook {
@@ -146,6 +149,7 @@ internal static partial class MinHook {
     /// Uninitialize the MinHook library. You must call this function EXACTLY ONCE at the end of your program.
     /// </summary>
     [LibraryImport("libMinHook.x64", EntryPoint = "MH_Uninitialize")]
+    // ReSharper disable once UnusedMember.Local
     private static partial uint MinHookUninitialize();
 
     static MinHook() {
@@ -168,9 +172,9 @@ internal static partial class MinHook {
     }
 
     // todo: auto gen
-    public static unsafe void Attach(delegate*unmanaged<nint, nint, uint, void> origin, delegate*unmanaged<nint, nint, uint, void> handler, out delegate*unmanaged<nint, nint, uint, void> trampoline) {
+    public static unsafe void Attach(delegate*unmanaged<nint, void> origin, delegate*unmanaged<nint, void> handler, out delegate*unmanaged<nint, void> trampoline) {
         Attach((nint) origin, (nint) handler, out var trampoline1);
-        trampoline = (delegate*unmanaged<nint, nint, uint, void>) trampoline1;
+        trampoline = (delegate*unmanaged<nint, void>) trampoline1;
     }
 
     // todo: auto gen
