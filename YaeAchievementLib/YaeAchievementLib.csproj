@@ -25,20 +25,20 @@
     </ItemGroup>
 
     <ItemGroup>
-        <DirectPInvoke Include="NTDLL"/>
-        <DirectPInvoke Include="USER32"/>
-        <DirectPInvoke Include="KERNEL32"/>
-        <DirectPInvoke Include="libMinHook.x64"/>
-        <NativeLibrary Include="lib\libMinHook.x64.lib"/>
+        <DirectPInvoke Include="NTDLL" />
+        <DirectPInvoke Include="USER32" />
+        <DirectPInvoke Include="KERNEL32" />
+        <DirectPInvoke Include="libMinHook.x64" />
+        <NativeLibrary Include="lib\libMinHook.x64.lib" />
     </ItemGroup>
 
     <ItemGroup>
-        <AssemblyAttribute Include="System.Runtime.CompilerServices.DisableRuntimeMarshallingAttribute"/>
+        <AssemblyAttribute Include="System.Runtime.CompilerServices.DisableRuntimeMarshallingAttribute" />
     </ItemGroup>
 
     <ItemGroup>
-        <Using Include="System.Diagnostics"/>
-        <Using Include="System.Diagnostics.CodeAnalysis"/>
+        <Using Include="System.Diagnostics" />
+        <Using Include="System.Diagnostics.CodeAnalysis" />
     </ItemGroup>
 
     <PropertyGroup>
@@ -54,11 +54,18 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <None Include="$(PublishDir)\$(TargetName)$(NativeBinaryExt)" Pack="true" PackagePath="runtimes\win-x64\native" Visible="false"/>
+        <None Include="$(PublishDir)\$(TargetName)$(NativeBinaryExt)" Pack="true" PackagePath="runtimes\win-x64\native" Visible="false" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference OutputItemType="Analyzer" Include="..\YaeAchievement.SourceGeneration\YaeAchievement.SourceGeneration\YaeAchievement.SourceGeneration.csproj">
+        <PrivateAssets>all</PrivateAssets>
+        <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      </ProjectReference>
     </ItemGroup>
 
     <Target Name="GenerateNuGetPackage" AfterTargets="CopyNativeBinary">
-        <Exec Command="dotnet pack --no-build --nologo" UseUtf8Encoding="Always" EchoOff="true"/>
+        <Exec Command="dotnet pack --no-build --nologo" UseUtf8Encoding="Always" EchoOff="true" />
     </Target>
 
 </Project>
