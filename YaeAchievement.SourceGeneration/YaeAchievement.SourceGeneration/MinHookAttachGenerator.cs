@@ -19,31 +19,21 @@ public sealed class MinHookAttachGenerator : IIncrementalGenerator
 
     private static bool Filter(SyntaxNode node, CancellationToken token)
     {
-        if (node is not InvocationExpressionSyntax invocation)
+        return node is InvocationExpressionSyntax
         {
-            return false;
-        }
-
-        if (invocation.Expression is not MemberAccessExpressionSyntax memberAccess)
-        {
-            return false;
-        }
-
-        // MinHook.Attach
-        if (memberAccess.Expression is not IdentifierNameSyntax { Identifier.Text: "MinHook" } ||
-            memberAccess.Name is not { Identifier.Text: "Attach" })
-        {
-            return false;
-        }
-
-        return true;
+            Expression: MemberAccessExpressionSyntax
+            {
+                Expression: IdentifierNameSyntax { Identifier.Text: "MinHook" },
+                Name.Identifier.Text: "Attach"
+            }
+        };
     }
 
     private static AttachInfo Transform(GeneratorSyntaxContext context, CancellationToken token)
     {
         InvocationExpressionSyntax invocation = (InvocationExpressionSyntax)context.Node;
         SeparatedSyntaxList<ArgumentSyntax> args = invocation.ArgumentList.Arguments;
-        if (args.Count != 3)
+        if (args.Count is not 3)
         {
             return null;
         }
@@ -55,7 +45,7 @@ public sealed class MinHookAttachGenerator : IIncrementalGenerator
             return null;
         }
 
-        return new AttachInfo
+        return new()
         {
             MinimallyQualifiedType = type,
         };
@@ -67,9 +57,9 @@ public sealed class MinHookAttachGenerator : IIncrementalGenerator
             .WithMembers(List<MemberDeclarationSyntax>(
             [
                 FileScopedNamespaceDeclaration(ParseName("Yae.Utilities")),
-                    ClassDeclaration("MinHook")
-                        .WithModifiers(TokenList(Token(SyntaxKind.InternalKeyword), Token(SyntaxKind.StaticKeyword), Token(SyntaxKind.PartialKeyword)))
-                        .WithMembers(List(GenerateMethods(infoArray)))
+                ClassDeclaration("MinHook")
+                    .WithModifiers(TokenList(Token(SyntaxKind.InternalKeyword), Token(SyntaxKind.StaticKeyword), Token(SyntaxKind.PartialKeyword)))
+                    .WithMembers(List(GenerateMethods(infoArray)))
             ]));
 
         context.AddSource("MinHook.Attach.g.cs", unit.NormalizeWhitespace().ToFullString());
