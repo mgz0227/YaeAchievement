@@ -159,30 +159,6 @@ internal static partial class MinHook {
         }
     }
 
-    // todo: auto gen
-    public static unsafe void Attach(delegate*unmanaged<byte*, int, ushort> origin, delegate*unmanaged<byte*, int, ushort> handler, out delegate*unmanaged<byte*, int, ushort> trampoline) {
-        Attach((nint) origin, (nint) handler, out var trampoline1);
-        trampoline = (delegate*unmanaged<byte*, int, ushort>) trampoline1;
-    }
-
-    // todo: auto gen
-    public static unsafe void Attach(delegate*unmanaged<nint, int, double, double, int, void> origin, delegate*unmanaged<nint, int, double, double, int, void> handler, out delegate*unmanaged<nint, int, double, double, int, void> trampoline) {
-        Attach((nint) origin, (nint) handler, out var trampoline1);
-        trampoline = (delegate*unmanaged<nint, int, double, double, int, void>) trampoline1;
-    }
-
-    // todo: auto gen
-    public static unsafe void Attach(delegate*unmanaged<nint, void> origin, delegate*unmanaged<nint, void> handler, out delegate*unmanaged<nint, void> trampoline) {
-        Attach((nint) origin, (nint) handler, out var trampoline1);
-        trampoline = (delegate*unmanaged<nint, void>) trampoline1;
-    }
-
-    // todo: auto gen
-    public static unsafe void Attach(delegate*unmanaged<int, void*, int, int> origin, delegate*unmanaged<int, void*, int, int> handler, out delegate*unmanaged<int, void*, int, int> trampoline) {
-        Attach((nint) origin, (nint) handler, out var trampoline1);
-        trampoline = (delegate*unmanaged<int, void*, int, int>) trampoline1;
-    }
-
     public static void Attach(nint origin, nint handler, out nint trampoline) {
         uint result;
         if ((result = MinHookCreate(origin, handler, out trampoline)) != 0) {
