@@ -35,18 +35,21 @@ public static class Utils {
         //
         if (_updateInfo?.CdnFiles.TryGetValue(path, out var cdnFile) == true) {
             try {
-                var tasks = cdnFile.Urls.Select(url => GetFileFromCdn(url, cacheKey, cdnFile.Hash, cdnFile.Size));
-                var data = await Task.WhenAny(tasks).Unwrap();
+                var data = await cdnFile.Urls
+                    .Select(url => GetFileFromCdn(url, cacheKey, cdnFile.Hash, cdnFile.Size))
+                    .WhenFirstSuccessful()
+                    .Unwrap();
                 transaction.Finish();
                 return data;
             } catch (Exception e) when (e is SocketException or TaskCanceledException or HttpRequestException or InvalidDataException) {}
         }
         //
         try {
-            var data = await Task.WhenAny(
+            var data = await WhenFirstSuccessful([
                 GetFileReal($"https://rin.holohat.work/{path}", cacheKey),
+                GetFileReal($"https://ena-rin.holohat.work//{path}", cacheKey),
                 GetFileReal($"https://cn-cd-1259389942.file.myqcloud.com/{path}", cacheKey)
-            ).Unwrap();
+            ]).Unwrap();
             transaction.Finish();
             return data;
         } catch (Exception e) when (e is SocketException or TaskCanceledException or HttpRequestException) {
@@ -326,5 +329,27 @@ public static class Utils {
         if (fontInfo.FaceName.ToString() == "Terminal") { // 点阵字体
             CultureInfo.CurrentUICulture = CultureInfo.GetCultureInfo("en-US"); // todo: use better way like auto set console font etc.
         }
+    }
+
+    // https://stackoverflow.com/a/76953892
+    private static async Task<Task<TResult>> WhenFirstSuccessful<TResult>(this IEnumerable<Task<TResult>> tasks) {
+        var cts = new CancellationTokenSource();
+        Task<TResult>? selectedTask = null;
+        var continuations = tasks
+            .TakeWhile(_ => !cts.IsCancellationRequested)
+            .Select(task => {
+                return task.ContinueWith(t => {
+                    if (t.IsCompletedSuccessfully) {
+                        if (Interlocked.CompareExchange(ref selectedTask, t, null) is null) {
+                            cts.Cancel();
+                        }
+                    }
+                }, cts.Token, TaskContinuationOptions.DenyChildAttach | TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
+            });
+        var whenAll = Task.WhenAll(continuations);
+        try {
+            await whenAll.ConfigureAwait(false);
+        } catch when (whenAll.IsCanceled) { /* ignore */ }
+        return selectedTask!;
     }
 }
