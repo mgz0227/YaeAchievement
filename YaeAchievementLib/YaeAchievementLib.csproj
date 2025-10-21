@@ -58,7 +58,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference OutputItemType="Analyzer" Include="..\YaeAchievement.SourceGeneration\YaeAchievement.SourceGeneration\YaeAchievement.SourceGeneration.csproj">
+      <ProjectReference OutputItemType="Analyzer" Include="..\YaeAchievement.SourceGeneration\YaeAchievement.SourceGeneration.csproj">
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </ProjectReference>

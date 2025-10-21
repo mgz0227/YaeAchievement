@@ -1,5 +1,5 @@
-<Solution>
-  <Project Path="YaeAchievement.SourceGeneration/YaeAchievement.SourceGeneration/YaeAchievement.SourceGeneration.csproj" Id="3c1c5723-c1e4-4119-9ad5-de5a415c5980" />
+﻿<Solution>
+  <Project Path="YaeAchievement.SourceGeneration/YaeAchievement.SourceGeneration.csproj" />
   <Project Path="YaeAchievementLib\YaeAchievementLib.csproj" />
   <Project Path="YaeAchievement\YaeAchievement.csproj" />
 </Solution>
