@@ -28,7 +28,7 @@ internal static unsafe class Application {
         //
         RecordChecksum();
         MinHook.Attach(DoCmd, &OnDoCmd, out _doCmd);
-        MinHook.Attach(ToUInt32, &OnToInt32, out _toInt32);
+        MinHook.Attach(ToInt32, &OnToInt32, out _toInt32);
         MinHook.Attach(UpdateNormalProp, &OnUpdateNormalProp, out _updateNormalProp);
         MinHook.Attach(EventSystemUpdate, &OnEventSystemUpdate, out _eventSystemUpdate);
         return 0;
