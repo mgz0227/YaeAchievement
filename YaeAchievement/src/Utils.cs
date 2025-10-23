@@ -260,12 +260,15 @@ public static class Utils {
                             break;
                         case 0xFD:
                             writer.Write(methodRva.DoCmd);
-                            writer.Write(methodRva.ToUint16);
                             writer.Write(methodRva.UpdateNormalProp);
                             writer.Write(methodRva.NewString);
                             writer.Write(methodRva.FindGameObject);
                             writer.Write(methodRva.EventSystemUpdate);
                             writer.Write(methodRva.SimulatePointerClick);
+                            writer.Write(methodRva.ToInt32);
+                            writer.Write(methodRva.TcpStatePtr);
+                            writer.Write(methodRva.SharedInfoPtr);
+                            writer.Write(methodRva.Decompress);
                             break;
                         case 0xFE:
                             _proc!.ResumeMainThread();

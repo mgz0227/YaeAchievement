@@ -19,12 +19,15 @@ message AchievementItem {
 
 message MethodRvaConfig {
     uint32 do_cmd = 1;
-    uint32 to_uint16 = 2;
     uint32 update_normal_prop = 3;
     uint32 new_string = 4;
     uint32 find_game_object = 5;
     uint32 event_system_update = 6;
     uint32 simulate_pointer_click = 7;
+    uint32 to_int32 = 8;
+    uint32 tcp_state_ptr = 9;
+    uint32 shared_info_ptr = 10;
+    uint32 decompress = 11;
 }
 
 message NativeLibConfig {

@@ -2,6 +2,7 @@ using System.Buffers.Binary;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Yae.Utilities;
+using static Yae.GameMethod;
 
 namespace Yae;
 
@@ -26,10 +27,10 @@ internal static unsafe class Application {
         Log.ResetConsole();
         //
         RecordChecksum();
-        MinHook.Attach(GameMethod.DoCmd, &OnDoCmd, out _doCmd);
-        MinHook.Attach(GameMethod.ToUInt16, &OnToUInt16, out _toUInt16);
-        MinHook.Attach(GameMethod.UpdateNormalProp, &OnUpdateNormalProp, out _updateNormalProp);
-        MinHook.Attach(GameMethod.EventSystemUpdate, &OnEventSystemUpdate, out _eventSystemUpdate);
+        MinHook.Attach(DoCmd, &OnDoCmd, out _doCmd);
+        MinHook.Attach(ToUInt32, &OnToInt32, out _toInt32);
+        MinHook.Attach(UpdateNormalProp, &OnUpdateNormalProp, out _updateNormalProp);
+        MinHook.Attach(EventSystemUpdate, &OnEventSystemUpdate, out _eventSystemUpdate);
         return 0;
     }
 
@@ -41,12 +42,12 @@ internal static unsafe class Application {
 
     #region RecvPacket
 
-    private static delegate*unmanaged<byte*, int, ushort> _toUInt16;
+    private static delegate*unmanaged<byte*, int, int> _toInt32;
 
     [UnmanagedCallersOnly]
-    private static ushort OnToUInt16(byte* val, int startIndex) {
-        var ret = _toUInt16(val, startIndex);
-        if (ret != 0xAB89 || *(ushort*) (val += 0x20) != 0x6745) {
+    private static int OnToInt32(byte* val, int startIndex) {
+        var ret = _toInt32(val, startIndex);
+        if (startIndex != 6 || *(ushort*) (val += 0x20) != 0x6745) {
             return ret;
         }
         var cmdId = BinaryPrimitives.ReverseEndianness(*(ushort*) (val + 2));
@@ -58,9 +59,59 @@ internal static unsafe class Application {
         return ret;
         static Span<byte> GetData(byte* val) {
             var headLen = BinaryPrimitives.ReverseEndianness(*(ushort*) (val + 4));
+            var headPtr = val + 10;
             var dataLen = BinaryPrimitives.ReverseEndianness(*(uint*) (val + 6));
-            return new Span<byte>(val + 10 + headLen, (int) dataLen);
+            var dataPtr = val + 10 + headLen;
+            var unzipLen = GetDecompressedSize(new Span<byte>(headPtr, headLen));
+            if (unzipLen == 0) {
+                return new Span<byte>(dataPtr, (int) dataLen);
+            }
+            var unzipBuf = NativeMemory.Alloc(unzipLen);
+            if (!Decompress(*TcpStatePtr, *SharedInfoPtr, dataPtr, dataLen, unzipBuf, unzipLen)) {
+                throw new InvalidDataException("Decompress failed.");
+            }
+            return new Span<byte>(unzipBuf, (int) unzipLen);
         }
+    }
+
+    private static uint GetDecompressedSize(Span<byte> header) {
+        var offset = 0;
+        ulong tag;
+        while (offset != header.Length && (tag = ReadRawVarInt64(header, ref offset)) != 0) {
+            if (tag == 64) {
+                return (uint) ReadRawVarInt64(header, ref offset);
+            }
+            switch (tag & 7) {
+                case 0:
+                    ReadRawVarInt64(header, ref offset);
+                    break;
+                case 1:
+                    offset += 8;
+                    break;
+                case 2:
+                    offset += (int) ReadRawVarInt64(header, ref offset);
+                    break;
+                case 3:
+                case 4:
+                    throw new NotSupportedException();
+                case 5:
+                    offset += 4;
+                    break;
+            }
+        }
+        return 0;
+    }
+
+    private static ulong ReadRawVarInt64(this Span<byte> span, ref int offset) {
+        ulong result = 0;
+        for (var i = 0; i < 8; i++) {
+            var b = span[offset++];
+            result |= (ulong) (b & 0x7F) << (i * 7);
+            if (b < 0x80) {
+                return result;
+            }
+        }
+        throw new InvalidDataException("CodedInputStream encountered a malformed varint.");
     }
 
     #endregion
@@ -118,7 +169,7 @@ internal static unsafe class Application {
                 Buffer = buffer,
                 Length = 256
             };
-            _ = GameMethod.DoCmd(23, Unsafe.AsPointer(ref data), sizeof(RecordChecksumCmdData));
+            _ = DoCmd(23, Unsafe.AsPointer(ref data), sizeof(RecordChecksumCmdData));
             RecordedChecksum[i] = data;
             //REPL//Log.Trace($"nType={i}, value={new string((sbyte*) buffer, 0, data.Length)}");
         }
@@ -153,9 +204,9 @@ internal static unsafe class Application {
     public static void OnEventSystemUpdate(nint @this) {
         _eventSystemUpdate(@this);
         if (Environment.TickCount64 - _lastTryEnterTime > 200) {
-            var obj = GameMethod.FindGameObject(GameMethod.NewString("BtnStart"u8.AsPointer()));
-            if (obj != 0 && GameMethod.SimulatePointerClick(@this, obj)) {
-                MinHook.Detach((nint) GameMethod.EventSystemUpdate);
+            var obj = FindGameObject(NewString("BtnStart"u8.AsPointer()));
+            if (obj != 0 && SimulatePointerClick(@this, obj)) {
+                MinHook.Detach((nint) EventSystemUpdate);
             }
             _lastTryEnterTime = Environment.TickCount64;
         }
