@@ -1,4 +1,5 @@
-﻿using System.ComponentModel;
+﻿using Microsoft.Win32.SafeHandles;
+using System.ComponentModel;
 using System.Runtime.InteropServices;
 using Windows.Win32;
 using Windows.Win32.Foundation;
@@ -76,10 +77,20 @@ internal sealed unsafe class GameProcess {
             }
             // Get lib base address in target process
             byte* baseAddress = null;
-            using (var hSnap = Native.CreateToolhelp32Snapshot_SafeHandle(CREATE_TOOLHELP_SNAPSHOT_FLAGS.TH32CS_SNAPMODULE, Id)) {
-                if (hSnap.IsInvalid) {
-                    throw new Win32Exception { Data = { { "api", "CreateToolhelp32Snapshot" } } };
+            SafeFileHandle hSnap;
+            do
+            {
+                hSnap = Native.CreateToolhelp32Snapshot_SafeHandle(CREATE_TOOLHELP_SNAPSHOT_FLAGS.TH32CS_SNAPMODULE, Id);
+                if (Marshal.GetLastSystemError() is not (0 or 24)) // ERROR_BAD_LENGTH
+                {
+                    break;
                 }
+            }
+            while (hSnap.IsInvalid);
+            if (hSnap.IsInvalid) {
+                throw new Win32Exception { Data = { { "api", "CreateToolhelp32Snapshot" } } };
+            }
+            using (hSnap) {
                 var moduleEntry = new MODULEENTRY32 {
                     dwSize = (uint) sizeof(MODULEENTRY32)
                 };
